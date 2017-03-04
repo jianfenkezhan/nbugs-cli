@@ -1,0 +1,23 @@
+{
+  "name": "nbugs-cli",
+  "version": "1.0.19",
+  "description": "a generator for react-antd project",
+  "bin": {
+    "nbugs-cli": "bin/nbugs-cli"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "bin": "./bin/nbugs-inc"
+  },
+  "dependencies": {
+    "chalk": "^1.1.3",
+    "co": "^4.6.0",
+    "co-prompt": "^1.0.0",
+    "commander": "^2.9.0",
+    "ora": "^0.4.1",
+    "mkdirp": "0.5.1",
+    "sorted-object": "2.0.1"
+  },
+  "author": "goooooog",
+  "license": "ISC"
+}

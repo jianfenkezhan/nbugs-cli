@@ -1,0 +1,1 @@
+console.log("@nbugs-cli to test");

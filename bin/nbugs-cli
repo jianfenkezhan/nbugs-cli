@@ -1,0 +1,364 @@
+#!/usr/bin/env node
+
+const nbugsCMD = require('commander')
+const mkdirp = require('mkdirp')
+const os = require('os')
+const fs = require('fs')
+const path = require('path')
+const sortedObject = require('sorted-object')
+const readline = require('readline');
+
+
+const util = require('util');
+const pkg = require("../package.json")
+
+/**
+ *  keep OS same
+ */
+const eol = os.EOL;
+const _exit = process.exit;
+
+process.exit = exit;
+around(nbugsCMD, 'optionMissingArgument', function (fn, args) {
+  nbugsCMD.outputHelp()
+  fn.apply(this, args)
+  return { args: [], unknown: [] }
+})
+
+before(nbugsCMD, 'outputHelp', function () {
+  // track if help was shown for unknown option
+  this._helpShown = true
+});
+
+before(nbugsCMD, 'unknownOption', function () {
+  this._allowUnknownOption = this._helpShown
+  // show help if not yet shown
+  if (!this._helpShown) {
+    nbugsCMD.outputHelp()
+  }
+})
+
+
+/**
+ * Define version for app
+ */
+nbugsCMD.version(pkg.version)
+
+
+/**
+ * define commander OPTIONS
+ */
+nbugsCMD.usage('[option] [dir]')
+
+/**
+ * init nbugs-cli 
+ */
+nbugsCMD
+  .option('-r, --react', 'add a react project', optionRename('--react', 'gooooog'))
+
+
+/**
+ * prase args 
+ */
+nbugsCMD.parse(process.argv)
+
+
+/**
+ * run main function
+ */
+if (!exit.exited) {
+  main();
+}
+/**
+ *  if not input, show help options
+ */
+// if (!nbugsCMD.args.length) {
+//   nbugsCMD.help()
+// }
+
+/**
+ * check currently dir is or isn't empty
+ */
+function emptyDir(path, fn) {
+ fs.readdir(path, function(err, files) {
+    if (err && 'ENOENT' != err.code) throw err;
+    fn(!files || !files.length);
+  });
+}
+
+function exit(code) {
+  function done() {
+    if (!(draining--)) _exit(code);
+  }
+
+  var draining = 0;
+  var streams = [process.stdout, process.stderr];
+
+  exit.exited = true;
+
+  streams.forEach(function(stream){
+    // submit empty write request and wait for completion
+    draining += 1;
+    stream.write('', done);
+  });
+
+  done();
+}
+
+function main() {
+  // path
+  destinationPath = nbugsCMD.args.shift() || '.';
+  // name of APP
+  const appName = createAppName(path.resolve(destinationPath)) || "nbugs-gooooog";
+  
+  /**
+   * Generate app 
+   */
+  emptyDir(destinationPath, function(empty) {
+    if (empty || nbugsCMD.force) {
+      createApp(appName, destinationPath);
+    } else {
+      confirm('destination is not empty, continue? [y/N]', function(ok) {
+        if (ok) {
+          process.stdin.destroy();
+          createApp(appName, destinationPath);
+        } else {
+          console.error('aborting')
+          exit(1);
+        }
+      })
+    }
+  })
+}
+
+
+
+/**
+ * create a function to confirm yes|ok|sure in commandline 
+ */
+function confirm(msg, callback) {
+  var rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  rl.question(msg, function (input) {
+    rl.close();
+    callback(/^y|yes|ok|true$/i.test(input));
+  });
+}
+
+/**
+ * install around function
+ */
+function around(obj, method, fn) {
+  const old = obj[method]
+  
+  obj[method] = function () {
+    const args = new Array(arguments.length);
+    
+    for (let i = 0; i < args.length; i++) args[i] = arguments[i]
+    return fn.call(this, old, args)
+  }
+}
+
+/**
+ * Install a before function
+ */
+
+function before(obj, method, fn) {
+  var old = obj[method];
+  obj[method] = function () {
+    fn.call(this);
+    old.apply(this, arguments);
+  };
+}
+
+/**
+ * copyTemplate
+ */
+function copyTemylate(form, to) {
+  form = path.join(__dirname, '..', 'templates', from);
+  write(to, fs.readFilesSync(from, 'utf-8'));
+}
+
+
+/**
+ * createAppName && init appName
+ */
+function createAppName(pathName) {
+  return path.basename(pathName)
+    .replace(/[^A-Za-z0-9\.()!~*'-]+/g, '-')
+    .replace(/^[-_\.]+|-+$/g, '')
+    .toLowerCase()
+}
+
+
+/**
+ * launchCMD
+ */
+function launchedFromCmd() {
+  return process.platform === 'win32' && process.env._ === undefined;
+}
+
+/**
+ * loadTemplate
+ */
+function loadTemplate(name) {
+  return fs.readFileSync(path.join(__dirname, '..', 'templates', name), 'utf-8')
+} 
+
+
+/**
+ * create APP
+ */
+function createApp(appName, path) {
+  let wait = 5;
+  console.log();
+  
+  function complete() {
+    if (--wait) return;
+    const prompt = launchedFromCmd() ? '>' : '$';
+    console.log();
+    console.log('   install dependencies');
+    console.log('   s% cd s% && npm install', prompt, appName);
+    console.log();
+
+    // if (launchedFromCmd()) {
+    //   // @TODO add option to Debug app
+    // } else {
+    //   // @TODO add option to Debug app
+    // }
+    console.log();
+  }
+
+  // start loadTemplate
+
+  const appIndex = loadTemplate('src/components/demo-one/index.js');
+  // entry files
+  const entriesIndex = loadTemplate('src/entries/index.js');
+  const eneriesIndexless = loadTemplate('src/entries/index.less');
+  const eneriesIndexhtml = loadTemplate('src/entries/index.html');
+  //layout files
+  const layoutApp = loadTemplate('src/layouts/App.jsx');
+  const demoLayout = loadTemplate('src/layouts/DemoLayout.jsx');
+  const header = loadTemplate('src/layouts/Header.jsx');
+  const layoutIndex = loadTemplate('src/layouts/index.js');
+  const SideBar = loadTemplate('src/layouts/SideBar.jsx');
+  const layoutSideBar = loadTemplate('src/layouts/SideBarLayout.jsx');
+  // layout less
+  const headerLess = loadTemplate('src/layouts/Header.less');
+  const layoutSideBarLess = loadTemplate('src/layouts/SideBarLayout.less');
+  const sideBarLess = loadTemplate('src/layouts/SideBar.less');
+
+  //  load routes
+  const routesDemo = loadTemplate('src/routes/demo-one.js');
+  const routesIndex = loadTemplate('src/routes/index.js');
+
+  // load services
+  const controller = loadTemplate('src/services/controller.js');
+  // load widgets
+  const dataSourecMenu = loadTemplate('src/widgets/DataSourceMenu.jsx');
+  const dataSourecMenuLess = loadTemplate('src/widgets/DataSourceMenu.less');
+
+  // load package & webpackConfig
+  const package = loadTemplate('./package.json');
+  const webpackConfig = loadTemplate('./webpack.Config.js');
+
+  console.log("check files is or isn't my wanted", appName)
+
+  mkdir(path, function() {
+    console.log("   \033[38;5;206mstart write files & loading........\033[0m")
+    mkdir(path + '/', function() {
+      write(path + '/package.json', package);
+      write(path + '/webpack.Config.js', webpackConfig);
+    });
+    mkdir(path + '/src');
+    mkdir(path + '/src/components');
+    mkdir(path + '/src/components/demo-one',  function() {
+      write(path + '/src/components/demo-one/index.js', appIndex);
+    });
+    mkdir(path + '/src/entries', function() {
+      write(path + '/src/entries/index.js', entriesIndex);
+      write(path + '/src/entries/index.less', eneriesIndexless);
+      write(path + '/src/entries/index.html', eneriesIndexhtml);
+    });
+    mkdir(path + '/src/images');
+    mkdir(path + '/src/layouts', function() {
+      write(path + '/src/layouts/App.jsx', layoutApp);
+      write(path + '/src/layouts/DemoLayout.jsx', demoLayout);
+      write(path + '/src/layouts/Header.jsx', header);
+      write(path + '/src/layouts/index.js', layoutIndex);
+      write(path + '/src/layouts/SideBar.js', SideBar);
+      write(path + '/src/layouts/SideBarLayout.js', layoutSideBar);
+      write(path + '/src/layouts/Header.less', headerLess);
+      write(path + '/src/layouts/SideBarLayout.less', layoutSideBarLess);
+      write(path + '/src/layouts/SideBar.less', sideBarLess);
+    });
+    mkdir(path + '/src/routes', function() {
+      write(path + '/src/routes/demo-one.js', routesDemo);
+      write(path + '/src/routes/index.js', routesIndex);
+    });
+    mkdir(path + '/src/services', function() {
+      write(path + '/src/services/controller.js', controller);
+    });
+    mkdir(path + '/src/widgets', function() {
+       write(path + '/src/widgets/DataSourceMenu.jsx', dataSourecMenu);
+       write(path + '/src/widgets/DataSourceMenu.less', dataSourecMenuLess);
+    });
+    console.log();
+    console.log();
+    complete();
+  })
+}
+
+
+/**
+ * Define a callback function for CMD to rename option
+ * @param {string} origName
+ * @param {string} newName
+ */
+function optionRename(origName, newName) {
+  return function (res) {
+    warning(util.format("option `%s' has been rename to `%s'", origName, newName))
+    return res
+  }
+}
+
+
+/**
+ * define a personalization warning of message service
+ * @param {string} message
+ */
+function warning(message) {
+  console.error()
+  message.split('\n').forEach(function(line) {
+    console.error('  warning: %s', line)
+  })
+  console.error();
+}
+
+
+/**
+ * write str => path
+ * @param {string} path
+ * @param {string} str
+ * 关于命令行着色，有两种方案，@one -> require("chalk")   @two -> [Colors In Terminal](http://jafrog.com/2013/11/23/colors-in-terminal.html),(https://en.wikipedia.org/wiki/ANSI_escape_code)
+ */
+ function write(path, str, mode) {
+   fs.writeFileSync(path, str, {mode: mode || 0o666});
+   console.log('   \x1b[36mcreate\x1b[0m : ' + path)
+ }
+
+/**
+ * mkdir
+ * @param {string} path
+ * @param {function} fn
+ */
+function mkdir(path, fn) {
+  mkdirp(path, 0777, function(err) {
+    if (err) throw err;
+    console.log('   \033[38;5;206mcreate\033[0m : ' + path)
+    fn && fn ();
+  })
+}
