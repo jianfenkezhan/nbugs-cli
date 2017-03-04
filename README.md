@@ -1,4 +1,4 @@
-### a simple generator for react project belong to nbugs
+### a simple generator for react webapp
 
 #### Install
 ```bash
