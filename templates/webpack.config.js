@@ -8,9 +8,6 @@ const glob = require('glob');
 
 module.exports = function(webpackConfig) {
   webpackConfig.babel.plugins.push('transform-runtime');
-  // webpackConfig.babel.plugins.push(['antd', {
-  //   style: 'css', // if true, use less
-  // }]);
 
   // Enable this if you have to support IE8.
   webpackConfig.module.loaders.unshift({
@@ -22,16 +19,6 @@ module.exports = function(webpackConfig) {
     test: /\.(eot|ttf|svg|woff)\?[^v]*$/,
     loader: 'url-loader?limit=10000',
   });
-
-  /*
-  webpackConfig.plugins.push(
-    new webpack.DefinePlugin({
-      'process.env':{
-        'NODE_ENV': JSON.stringify('production')
-      }
-    })
-  );
-  */
 
   webpackConfig.externals = {
     react: 'React',
@@ -59,16 +46,8 @@ module.exports = function(webpackConfig) {
     memo[name] = file;
     return memo;
   }, {});
-
-  // newEntries.common = ['jQuery', 'wangEditor'];
   
   webpackConfig.entry = Object.assign({}, webpackConfig.entry, newEntries);
-
-  // webpackConfig.plugins.push(
-  //   new webpack.ProvidePlugin({
-  //     $: 'jquery',
-  //     wangeditor: 'wangEditor',
-  // }));
   
   return webpackConfig;
 };

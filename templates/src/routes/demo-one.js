@@ -1,7 +1,7 @@
 export default {
-  path: 'demo',
+  path: '/',
   component: require('../layouts/DemoLayout'),
-  indexRoute: { onEnter: (nextState, replace) => replace('/demo/one') },
+  indexRoute: { onEnter: (nextState, replace) => replace('/one') },
   childRoutes: [{
     path: 'one',
     getComponent: (nextState, cb) => {

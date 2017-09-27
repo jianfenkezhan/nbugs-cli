@@ -21,7 +21,6 @@ export function request(options) {
   }
 
   timeout = timeout || 120000;
-  // if(flag < 2){
     return new Promise((resolve, reject) => {
     superagent
       [method](url)
@@ -48,27 +47,6 @@ export function request(options) {
 
         res = res.body;
 
-        // 未登录 & 已登录但用户信息不正确 直接跳转登录页面
-        if (res.code === 302 || res.code === 11000) {
-
-           location.href = res.data;
-           //location.href = '/login'
-        }
-        
-        //通用组件列表数据，出错code=10110
-        if(res.code === 10110){
-          message.error(res.msg);
-        }
-
-        //用户身份修改，如果没有权限code=10001
-        if (res.code === 10001) {
-          message.error(res.msg);
-        }
-
-        if(res.code === 10000) {
-          message.error(res.msg);
-        }
-
         if (res.code == 0 || res.code === 200) {
           if (res.data !== undefined) {
             resolve(res.data);
@@ -80,6 +58,4 @@ export function request(options) {
         reject(res);
       });
   });
-  // }
-  
 }

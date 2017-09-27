@@ -14,23 +14,6 @@
     <![endif]-->
   <script>
     (function(){
-      window.nbugs_monitor = function(category, action, label) {
-        console.log('[monitor] category: ' + category + ' action: ' + action + ' label: ' + label)
-      }
-      function onClick(e) {
-        e = e || window.e;
-        var target = e.target;
-        if (!target || !target.className) {
-          return;
-        }
-        var classList = target.className.split(' ');
-        console.log(classList)
-        if (classList.indexOf('nbugs-monitor') === -1) { return };
-        var category = target.getAttribute('data-category');
-        var action = target.getAttribute('data-action');
-        var label = target.getAttribute('data-label');
-        nbugs_monitor(category, action, label);
-      }
       if (window.addEventListener) {
         window.addEventListener('load', function() {
           document.body.addEventListener('click', onClick, false);

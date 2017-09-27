@@ -50,9 +50,6 @@ export default class DataSourceMenu extends Component {
     return null;
   }
 
-  /**
-   * 根据 item 来递归生成菜单
-   */
   renderMenuFromItem(item) {
     const menus = [];
     if (Array.isArray(item)) {
