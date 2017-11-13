@@ -1,6 +1,6 @@
 {
   "name": "nbugs-cli",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "description": "a generator for react-antd project",
   "bin": {
     "nbugs-cli": "bin/nbugs-cli"
